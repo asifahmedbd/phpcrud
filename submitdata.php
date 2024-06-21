@@ -59,13 +59,16 @@
 			foreach($product_name as $key => $val)
 			{
 				
-				$sql = "INSERT INTO products (product_sku, product_name, product_unit, product_description, 
-				product_price, product_image) VALUES ('". $product_sku[$key] ."','". $product_name[$key] ."',
-				'". $product_unit[$key] ."', '". $product_description[$key] ."','". $product_price[$key] ."',
-				'". $fileNames[$key] ."')";
+				// $sql = "INSERT INTO products (product_sku, product_name, product_unit, product_description, 
+				// product_price, product_image) VALUES ('". $product_sku[$key] ."','". $product_name[$key] ."',
+				// '". $product_unit[$key] ."', '". $product_description[$key] ."','". $product_price[$key] ."',
+				// '". $fileNames[$key] ."')";
 
+				$stmt = $conn->prepare("INSERT INTO products (product_sku, product_name, product_unit, product_description, product_price, product_image, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)");
+				$created_at = date('Y-m-d H:i:s');
+				$stmt->bind_param("ssssdss", $product_sku[$key], $product_name[$key], $product_unit[$key], $product_description[$key], $product_price[$key], $fileNames[$key], $created_at);
 
-				if ($conn->query($sql) == TRUE)
+				if ($stmt->execute() == TRUE)
 				{
 					
 					$insert_success = true;

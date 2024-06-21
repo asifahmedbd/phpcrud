@@ -5,23 +5,19 @@
 	$sql = "SELECT * FROM products";
 	$result = $conn->query($sql);
 
-	$filepath = 'http://localhost:8080/naushiba/uploads/';
+	$filepath = 'http://localhost/phpcrud/uploads/';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
 	<title>Product View</title>
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
 	<link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
 	
 
-	<script
-  src="https://code.jquery.com/jquery-3.3.1.min.js"
-  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-  crossorigin="anonymous"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 	<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 </head>
 <body>
@@ -74,20 +70,10 @@
 							
 							<td style= "text-align=center;"><img src = "<?php echo $filepath.$row["product_image"] ?>" width = "50" height = "50"></td>
 							
-							<td style = "display:flex; border:none;">
+							<td style = "border:none;">
 
-							<form id = "updateProduct" action = "update_product_view.php" method ="POST">
-
-									<input type = "hidden" name="product_id" value="<?php echo $row["id"]; ?>"/>
-									<input type = "submit" class="btn btn-success btn-sm" name="update" value="EDIT"/>
-
-							</form>
-
-							<form id="deleteProduct" action = "server.php" method="POST" style="margin=left:10px;">
-
-									<input type = "hidden" name="product_id" value="<?php echo $row["id"]; ?>"/>
-									<input onclick="return confirm('DO YOU WANT TO DELETE THIS PRODUCT?')"
-									type = "submit" class="btn btn-danger btn-sm" name="delete" value="DELETE"/>
+								<input type = "submit" class="btn btn-success btn-sm edit_product" name="update" value="EDIT" data-product-id="<?php echo $row["id"]; ?>"/>
+								<button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">DELETE</button>
 									
 							</form>
 							</td>
@@ -107,10 +93,112 @@
 	</div>
 </div>
 
+<div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editProductForm">
+          <div class="mb-3">
+            <label for="productName" class="form-label">Product Name</label>
+            <input type="text" class="form-control" id="productName" name="product_name">
+          </div>
+		  <div class="mb-3">
+            <label for="productSKU" class="form-label">Product SKU</label>
+            <input type="text" class="form-control" id="productSKU" name="product_sku">
+          </div>
+          <div class="mb-3">
+            <label for="productPrice" class="form-label">Product Price</label>
+            <input type="text" class="form-control" id="productPrice" name="productPrice">
+          </div>
+          <!-- Add more fields as needed -->
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="saveChanges">Save changes</button>
+		<input id="product_id" type="hidden" name="product_id" value="">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmDeleteModalLabel">Confirm Deletion</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete this product?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteButton">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script type="text/javascript">
 	$(document).ready(function() {
 	    $('#example').DataTable();
 	    $('.alert-success').delay(3000).fadeOut('slow');
+
+
+		$('.edit_product').on('click', function() {
+			var productId = $(this).data('product-id');
+			$.ajax({
+				url: 'ajax_getproductdata.php', // Replace with your server URL
+				type: 'GET',
+				data: { id: productId },
+				success: function(data) {
+					console.log(data);
+					var productData = JSON.parse(data);
+					// Populate the modal fields with the fetched data
+					$('#productName').val(productData.product_name);
+					$('#productSKU').val(productData.product_sku);
+					$('#productPrice').val(productData.product_price);
+					// Populate more fields as needed
+					
+					// Show the modal
+					$('#editProductModal').modal('show');
+					$('#editProductModal #product_id').val(productData.id);
+				},
+				error: function(xhr, status, error) {
+					console.error('AJAX Error: ' + status + error);
+				}
+			});
+		});
+
+		$('#saveChanges').on('click', function() {
+			var productId = $('#editProductModal #product_id').val();
+			console.log(productId);
+			var formData = $("#editProductForm").serialize();
+			// Send data to your PHP file using Ajax
+			$.ajax({
+				type: "POST",
+				url: "ajax_update_product_data.php", // Replace with your PHP file URL
+				data: formData,
+				success: function (response) {
+				// Handle success (e.g., show a message)
+					console.log("Form data submitted successfully:", response);
+				},
+				error: function () {
+				// Handle error (e.g., display an error message)
+				console.log("Error submitting form data.");
+				}
+			});
+		});
+
+
+
 	});
 </script>
 
