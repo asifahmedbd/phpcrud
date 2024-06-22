@@ -60,20 +60,21 @@
 					{
 						?>
 
-						<tr>
+						<tr id="productRow-<?php echo $row["id"]; ?>" class="product-row" data-id="<?php echo $row["id"]; ?>">
 							
 							<td><?php echo $count ?></td>
-							<td><?php echo $row["product_name"] ?></td>
-							<td><?php echo $row["product_sku"] ?></td>
-							<td><?php echo $row["product_unit"] ?></td>
-							<td><?php echo $row["product_price"] ?></td>
+							<td class="product-name"><?php echo $row["product_name"] ?></td>
+							<td class="product-sku"><?php echo $row["product_sku"] ?></td>
+							<td class="product-unit"><?php echo $row["product_unit"] ?></td>
+							<td class="product-price"><?php echo $row["product_price"] ?></td>
 							
 							<td style= "text-align=center;"><img src = "<?php echo $filepath.$row["product_image"] ?>" width = "50" height = "50"></td>
 							
 							<td style = "border:none;">
 
 								<input type = "submit" class="btn btn-success btn-sm edit_product" name="update" value="EDIT" data-product-id="<?php echo $row["id"]; ?>"/>
-								<button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">DELETE</button>
+								<button type="button" class="btn btn-danger btn-sm delete-product-btn" data-id="<?php echo $row["id"]; ?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">DELETE</button>
+
 									
 							</form>
 							</td>
@@ -112,15 +113,15 @@
           </div>
           <div class="mb-3">
             <label for="productPrice" class="form-label">Product Price</label>
-            <input type="text" class="form-control" id="productPrice" name="productPrice">
+            <input type="text" class="form-control" id="productPrice" name="product_price">
           </div>
           <!-- Add more fields as needed -->
+		  <input id="product_id" type="hidden" name="product_id" value="">
         </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary" id="saveChanges">Save changes</button>
-		<input id="product_id" type="hidden" name="product_id" value="">
       </div>
     </div>
   </div>
@@ -150,7 +151,7 @@
 	$(document).ready(function() {
 	    $('#example').DataTable();
 	    $('.alert-success').delay(3000).fadeOut('slow');
-
+		var productIdToDelete;
 
 		$('.edit_product').on('click', function() {
 			var productId = $(this).data('product-id');
@@ -186,9 +187,30 @@
 				type: "POST",
 				url: "ajax_update_product_data.php", // Replace with your PHP file URL
 				data: formData,
-				success: function (response) {
-				// Handle success (e.g., show a message)
-					console.log("Form data submitted successfully:", response);
+				success: function(response) {
+					var result = JSON.parse(response);
+
+					if (result.status === 'success') {
+					var productId = $('#product_id').val();
+					var productName = $('#productName').val();
+					var productSKU = $('#productSKU').val();
+					var productPrice = parseFloat($('#productPrice').val()).toFixed(2);
+
+					var row = $('#productRow-' + productId);
+					row.find('.product-name').text(productName);
+					row.find('.product-sku').text(productSKU);
+					row.find('.product-price').text(productPrice);
+
+					row.find('.edit-product-btn').data('name', productName)
+												.data('sku', productSKU)
+												.data('price', productPrice);
+
+					$('#editProductModal').modal('hide');
+
+					alert('Product updated successfully!');
+					} else {
+					alert('Failed to update product: ' + result.message);
+					}
 				},
 				error: function () {
 				// Handle error (e.g., display an error message)
@@ -197,7 +219,37 @@
 			});
 		});
 
+		// Set the product ID to delete when the delete button is clicked
+		$(document).on('click', '.delete-product-btn', function() {
+			productIdToDelete = $(this).data('id');
+		});
 
+		// Handle the confirm delete button click
+		$('#confirmDeleteButton').on('click', function() {
+			$.ajax({
+			url: 'ajax_delete_product.php', // Replace with your endpoint
+			type: 'POST',
+			data: { product_id: productIdToDelete },
+			success: function(response) {
+				var result = JSON.parse(response);
+
+				if (result.status === 'success') {
+				// Remove the product row from the table
+				$('#productRow-' + productIdToDelete).remove();
+
+				// Hide the delete confirmation modal
+				$('#confirmDeleteModal').modal('hide');
+
+				alert('Product deleted successfully!');
+				} else {
+				alert('Failed to delete product: ' + result.message);
+				}
+			},
+			error: function(xhr, status, error) {
+				alert('Error deleting product: ' + error);
+			}
+			});
+		});
 
 	});
 </script>
